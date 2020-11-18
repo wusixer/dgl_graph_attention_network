@@ -12,13 +12,14 @@ dependencies:
 - ipykernel>=5.3.4
 - ipython>=7.18.1
 - isort>=5.6.0  # has a bugfix that we need for imports sorted underneath docstring
-- jax<=0.1.76
-- jaxlib<=0.1.55
+- jax>=0.2.5
+- jaxlib>=0.1.56
 - jupyter>=1.0.0
 - jupyterlab>=2.2.7
 - mamba>=0.5.1
 - matplotlib>=3.3.1
 - mypy>=0.782
+- nbconvert
 - nbstripout>=0.3.9
 - networkx>=2.5
 - nodejs>=14.13.0
