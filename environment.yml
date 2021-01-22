@@ -37,6 +37,7 @@ dependencies:
 - scipy>=1.5.2
 - xarray>=0.16.0
 - cda-data-store-python-client-sdk-pandas
+- xlrd
 - pip:
   - mkdocs>=1.1.2
   - mkdocs-material>=6.0.2
