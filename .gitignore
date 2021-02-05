@@ -145,3 +145,5 @@ dmypy.json
 
 *.xlsx
 *.csv
+.DS_Store
+data/ghesquire_2011/protein_sequences.fasta

@@ -36,12 +36,14 @@ def load_ghesquire() -> pd.DataFrame:
         return logit(np.clip(x / 100, 0.01, 0.99))
 
     # outputs = logit(np.clip(df["%ox_fwd"] / 100, 0.01, 0.99))
-    df = df.assign(**{"%ox_fwd": tfm(df["%ox_fwd"])})
+    df = df.assign(**{"ox_fwd_logit": tfm(df["%ox_fwd"])})
 
     # 3. Ensure that %ox_rev is numeric and transformed properly.
     df = df.replace({"%ox_rev": {"": np.nan, " ": np.nan}}).change_type(
         "%ox_rev", float
     )
+    df = df.assign(**{"ox_rev_logit": tfm(df["%ox_rev"])})
+
     # 4. Rename columns properly
     df = df.rename(columns={"treshhold": "threshold"})
     return ghesquire_processed_schema.validate(df)

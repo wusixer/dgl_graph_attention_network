@@ -1,0 +1,3 @@
+filename: protein_sequences.fasta
+datastore-id: 20d99467-d096-4fc2-be66-338fef5ed4fb
+description: "Protein sequences from Ghesquire 2011 Met Oxidation dataset. We take accession numbers from the table's accession numbers and isoforms columns and query HitHub's mirror of uniprot for their sequences."
