@@ -1,12 +1,12 @@
 """Utilities for manipulating a protein graph."""
 from functools import wraps
-from typing import Callable, Hashable, List
+from typing import Callable, Dict, Hashable, List, Tuple
 
 import jax.numpy as np
 import networkx as nx
-import numpy as np
 import pandas as pd
 import xarray as xr
+from pyprojroot import here
 
 
 def extract_neighborhood(G: nx.Graph, n: Hashable, r: int) -> List[Hashable]:
@@ -306,3 +306,59 @@ def stack_adjacency_tensors(Gs: List[nx.Graph], funcs: List[Callable]):
         A = prep_adjacency_matrix(A, max_length + 1)
         adjs.append(A)
     return np.stack(adjs)
+
+
+def met_position(row: pd.Series):
+    """Extract the first Met residue position.
+
+    Depends on the Ghesquire dataset,
+    which has a "sequence" column and an "end" column,
+    such that the "end" column indicates the position
+    in the linear amino acid sequence
+    of the last letter in the "sequence" column.
+
+    Notes:
+    1. The "end" column is the integer position
+    of the last a.a. in the "sequence".
+
+    :param row: One row in the Ghesquire dataset.
+    """
+    s = row["sequence"]
+    s_rev = s[::-1]
+
+    num_back = s_rev.index("M")
+    return row["end"] - num_back
+
+
+def graph_tensors(
+    df: pd.DataFrame, graphs: Dict[str, nx.Graph]
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Return graph features and adjacency matrix for graph DL.
+
+    `df` should have the column `accession-sequence`,
+    and the set of values in that column should be perfect subset
+    of the keys in graphs. i.e. there should be no value in that column
+    that does not exist as a key in the `graphs` dictionary.
+    Otherwise, you will get an error.
+    """
+    aa_props = pd.read_csv(
+        here() / "data/amino_acid_properties.csv", index_col=0
+    )
+    funcs = [lambda n, d: pd.Series(aa_props[d["residue_name"]], name=n)]
+    feats = []
+    for acc in df["accession-sequence"]:
+        g = graphs[acc]
+        feat = np.array(generate_feature_dataframe(g, funcs).values)
+        feat = prep_features(feat, 20)
+        feats.append(feat)
+    feats = np.stack(feats)
+
+    adjs = []
+    for acc in df["accession-sequence"]:
+        g = graphs[acc]
+        a = np.expand_dims(np.array(nx.adjacency_matrix(g).todense()), 2)
+        a = prep_adjacency_matrix(a, 20)
+        adjs.append(a)
+    adjs = np.stack(adjs)
+
+    return adjs, feats

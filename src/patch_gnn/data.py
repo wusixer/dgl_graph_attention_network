@@ -13,22 +13,26 @@ from .schemas import ghesquire_processed_schema
 
 def load_ghesquire() -> pd.DataFrame:
     """Load Ghesquire data into memory."""
-    load_dotenv()
-    with open(
-        here(project_files=[".here"])
-        / "data/ghesquire_2011/datadescriptor.yaml",
-        "r+",
-    ) as f:
-        descriptor = yaml.safe_load(f)
+    try:
+        df = pd.read_excel(
+            here() / "data" / "ghesquire_2011" / "Ghesquiere2011_Met.xlsx"
+        )
+    except:
+        load_dotenv()
+        with open(
+            here(project_files=[".here"])
+            / "data/ghesquire_2011/datadescriptor.yaml",
+            "r+",
+        ) as f:
+            descriptor = yaml.safe_load(f)
 
-    datastore_id = descriptor["datastore-id"]
-    fpath = download_item(datastore_id)
-
-    df = pd.read_excel(fpath, engine="openpyxl").remove_empty()
+        datastore_id = descriptor["datastore-id"]
+        fpath = download_item(datastore_id)
+        df = pd.read_excel(fpath, engine="openpyxl")
 
     # Minimal preprocessing:
     # 1. Remove null values in "sequence" column.
-    df = df.dropna(subset=["sequence"])
+    df = df.remove_empty().dropna(subset=["sequence"])
     # 2. Ensure that the output column ("%ox_fwd") is logit-transformed.
 
     def tfm(x):
@@ -46,4 +50,16 @@ def load_ghesquire() -> pd.DataFrame:
 
     # 4. Rename columns properly
     df = df.rename(columns={"treshhold": "threshold"})
+
+    # 5. Forward fill the accession number
+    df["accession"] = df["accession"].fillna(method="ffill")
+
+    # 6. Create the accession-sequence column
+    df = df.concatenate_columns(
+        ["accession", "sequence"], "accession-sequence"
+    )
+
+    # 7. Drop the duplicates, which has the same accession value
+    df = df.drop_duplicates(subset=["accession", "end"])
+
     return ghesquire_processed_schema.validate(df)

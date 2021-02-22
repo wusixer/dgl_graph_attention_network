@@ -1,6 +1,7 @@
 """Patch-GNN layers."""
 import jax.numpy as np
 from jax import random, vmap
+from jax.experimental import stax
 from jax.nn.initializers import glorot_normal
 
 
@@ -109,4 +110,33 @@ def GraphSummation():
         """
         return np.sum(inputs, axis=0)
 
+    return init_fun, apply_fun
+
+
+def CustomGraphEmbedding(n_output: int):
+    """Return an embedding of a graph in n_output dimensions."""
+    init_fun, apply_fun = stax.serial(
+        MessagePassing(),
+        stax.Dense(2048),
+        stax.Sigmoid,
+        GraphSummation(),
+        stax.Dense(n_output),
+    )
+    return init_fun, apply_fun
+
+
+def LinearRegression(num_outputs):
+    """Linear regression layer."""
+    init_fun, apply_fun = stax.serial(
+        stax.Dense(num_outputs),
+    )
+    return init_fun, apply_fun
+
+
+def LogisticRegression(num_outputs):
+    """Logistic regression layer."""
+    init_fun, apply_fun = stax.serial(
+        stax.Dense(num_outputs),
+        stax.Softmax,
+    )
     return init_fun, apply_fun

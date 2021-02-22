@@ -14,10 +14,10 @@ dependencies:
 - ipykernel>=5.3.4
 - ipython>=7.18.1
 - isort>=5.6.0  # has a bugfix that we need for imports sorted underneath docstring
-- jax>=0.2.5
-- jaxlib>=0.1.56
+- jax
+- jaxlib
 - jupyter>=1.0.0
-- jupyterlab>=2.2.7
+- jupyterlab>=3.0
 - mamba>=0.5.1
 - matplotlib>=3.3.1
 - mypy>=0.782
@@ -42,13 +42,15 @@ dependencies:
 - xarray>=0.16.0
 - psycopg2>=2.8.6
 - biopython>=1.7.8
+- python-dotenv
+- keyrings.alt
 - pip:
   - mkdocs>=1.1.2
   - mkdocs-material>=6.0.2
   - mkdocstrings>=0.13.6
   - mknotebooks>=0.6.0
   - proteingraph>=0.3.0
-
 # After installation, be sure to install easy_datastore
 # for easy access to the data.
 # pip install git+https://bitbucket.prd.nibr.novartis.net/scm/sda/easy-datastore.git
+# Will be added later pip install --no-deps jax-unirep

@@ -4,7 +4,7 @@ from typing import Callable, Tuple
 
 import jax
 import jax.numpy as np
-from jax import vmap
+from jax import value_and_grad, vmap
 from jax.experimental import optimizers
 
 
@@ -38,7 +38,7 @@ def mseloss(params, model: Callable, inputs: np.ndarray, outputs: np.ndarray):
 def step(
     i: int,
     state: optimizers.OptimizerState,
-    dloss_fun: Callable,
+    loss_fun: Callable,
     apply_fun: Callable,
     update_fun: Callable,
     get_params: Callable,
@@ -83,8 +83,13 @@ def step(
     :param get_params: Optimizer state unpacking function.
     :param inputs: Model inputs that get passed to dloss_fun and apply_fun.
     :param outputs: Ground truth model outputs that get passed to dloss_fun.
+
+    :returns:
+        Optimizer state (`state`) and loss score (`v`).
     """
+    dloss_fun = value_and_grad(loss_fun)
     params = get_params(state)
-    g = dloss_fun(params, apply_fun, inputs, outputs)
+    v, g = dloss_fun(params, apply_fun, inputs, outputs)
     state = update_fun(i, g, state)
-    return state
+
+    return state, v

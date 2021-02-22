@@ -147,3 +147,7 @@ dmypy.json
 *.csv
 .DS_Store
 data/ghesquire_2011/protein_sequences.fasta
+data/ghesquire_2011/models/*.pdb
+data/ghesquire_2011/models.zip
+*.pkl
+.virtual_documents

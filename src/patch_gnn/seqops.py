@@ -9,8 +9,9 @@ oh_mapping = {l: arr for l, arr in zip(alphabet, oh_matrix)}
 
 def encoder(protein_seq: str) -> np.ndarray:
     """
-    Used to convert a protein sequence into a numpy
-    array. For example, A -> [1, 0, ..., 0], C -> [0, 1, 0, ..., 0]
+    Convert a protein sequence into a numpy array.
+
+    For example, A -> [1, 0, ..., 0], C -> [0, 1, 0, ..., 0]
     AC -> [1, 0, ..., 0, 0, 1, ..., 0]
 
     :param seq: the protein sequence needs to be encoded
@@ -24,7 +25,8 @@ def encoder(protein_seq: str) -> np.ndarray:
 
 def padding(protein_seq: str, length: int) -> str:
     """
-    Used to pad a protein sequence into certain length.
+    Pad a protein sequence into certain length.
+
     For example, pad a protein sequence 'length 3' into 'length 5':
     "ACD" -> "ACD--"
 
@@ -34,3 +36,10 @@ def padding(protein_seq: str, length: int) -> str:
     """
     padd_len = length - len(protein_seq)
     return protein_seq + "".join("-" for i in range(padd_len))
+
+
+def one_hot(df: pd.DataFrame, padding_length: int) -> np.ndarray:
+    """Convert the `sequence` column of `df` to a one-hot array."""
+    padded_seqs = list(padding(seq, padding_length) for seq in df["sequence"])
+    encodings = [encoder(seq) for seq in padded_seqs]
+    return np.vstack(encodings)
