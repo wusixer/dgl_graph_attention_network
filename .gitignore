@@ -151,3 +151,5 @@ data/ghesquire_2011/models/*.pdb
 data/ghesquire_2011/models.zip
 *.pkl
 .virtual_documents
+*.out
+.nfs*

@@ -79,12 +79,16 @@ class MPNN:
         self.params = get_params(state)
         return self
 
-    def predict(self, X):
+    def predict(self, X, checkpoint: int = None):
         """
         predict
         :param X: tuple(adjacency, node_features)
         """
-        return vmap(partial(self.model_apply_fun, self.params))(X)
+        params = self.params
+        if checkpoint:
+            _, _, get_params = self.optimizer
+            params = get_params(self.state_history[checkpoint])
+        return vmap(partial(self.model_apply_fun, params))(X)
 
 
 class DeepMPNN(MPNN):

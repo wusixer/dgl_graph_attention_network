@@ -330,6 +330,18 @@ def met_position(row: pd.Series):
     return row["end"] - num_back
 
 
+def sasa_features(n, d):
+    """Get back SASA features as a pandas Series."""
+    info = {
+        "log_Phob/A^2": d["log_Phob/A^2"],
+        "log_Phil/A^2": d["log_Phil/A^2"],
+        "log_SASA/A^2": d["log_SASA/A^2"],
+        "log_N(overl)": d["log_N(overl)"],
+    }
+    return pd.Series(info, name=n)
+
+
+
 def graph_tensors(
     df: pd.DataFrame, graphs: Dict[str, nx.Graph]
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -344,7 +356,10 @@ def graph_tensors(
     aa_props = pd.read_csv(
         here() / "data/amino_acid_properties.csv", index_col=0
     )
-    funcs = [lambda n, d: pd.Series(aa_props[d["residue_name"]], name=n)]
+    funcs = [
+        lambda n, d: pd.Series(aa_props[d["residue_name"]], name=n),
+        sasa_features
+    ]
     feats = []
     for acc in df["accession-sequence"]:
         g = graphs[acc]
@@ -362,3 +377,11 @@ def graph_tensors(
     adjs = np.stack(adjs)
 
     return adjs, feats
+
+
+def get_node(G: nx.Graph, pos: int):
+    """Get a node by particular residue position."""
+    node = [n for n, d in G.nodes(data=True) if d["residue_number"] == pos]
+    if len(node) == 1:
+        return node[0]
+    raise Exception("Node not found!")
