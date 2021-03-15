@@ -1,8 +1,12 @@
 """Patch-GNN layers."""
+from functools import partial
+
 import jax.numpy as np
-from jax import random, vmap
+from jax import lax, nn, random, vmap
+from jax._src.nn.functions import normalize
 from jax.experimental import stax
 from jax.nn.initializers import glorot_normal
+from jax.random import normal
 
 
 def MessagePassing(adjacency_weights_init=glorot_normal()):
@@ -140,3 +144,113 @@ def LogisticRegression(num_outputs):
         stax.Softmax,
     )
     return init_fun, apply_fun
+
+
+def concat_nodes(node1, node2):
+    """Concatenate two nodes together."""
+    return np.concatenate([node1, node2])
+
+
+def concatenate(node: np.ndarray, node_feats: np.ndarray):
+    """Concatenate node with each node in node_feats.
+
+    Behaviour is as follows.
+    Given a node with features `f_0` and stacked node features
+    `[f_0, f_1, f_2, ..., f_N]`,
+    return a stacked concatenated feature array:
+    `[(f_0, f_0), (f_0, f_1), (f_0, f_2), ..., (f_0, f_N)]`.
+
+    :param node: A vector embedding of a single node in the graph.
+        Should be of shape (n_input_features,)
+    :param node_feats: Stacked vector embedding of all nodes in the graph.
+        Should be of shape (n_nodes, n_input_features)
+    :returns: A stacked array of concatenated node features.
+    """
+    return vmap(partial(concat_nodes, node))(node_feats)
+
+
+def concatenate_node_features(node_feats):
+    """Return node-by-node concatenated features.
+
+    Given a node feature matrix of shape (n_nodes, n_features),
+    this returns a matrix of shape (n_nodes, n_nodes, 2*n_features).
+    """
+    outputs = vmap(partial(concatenate, node_feats=node_feats))(node_feats)
+    return outputs
+
+
+# def normalize_if_nonzero(p_vect):
+#     def if_zero(p):
+#         return p
+
+#     def if_nonzero(p):
+#         return p / np.sum(p)
+
+#     return lax.cond(np.sum(p_vect) == 0, if_zero, if_nonzero, p_vect)
+
+
+def GraphAttention(n_output_dims: int, w_init=normal, a_init=normal):
+    """Graph attention layer.
+
+    Expects a 2-tuple of (adjacency matrix, node embeddings) as the input.
+    """
+
+    def init_fun(key, input_shape):
+        """Graph attention layer init function."""
+        _, n_features, _ = input_shape
+        k1, k2, k3 = random.split(key, 3)
+        w_node_projection = (
+            w_init(key=k1, shape=(n_features, n_output_dims)) * 0.01
+        )
+        a_node_concat = a_init(key=k2, shape=(n_output_dims * 2,)) * 0.01
+        node_feat_attn = w_init(key=k3, shape=(n_features,))
+        return (n_output_dims,), (
+            w_node_projection,
+            a_node_concat,
+            node_feat_attn,
+        )
+
+    def apply_fun(params, inputs, **kwargs):
+        """Graph attention layer apply function."""
+        attention, node_projection = node_attention(params, inputs)
+
+        final_output = np.dot(attention, node_projection)
+        return final_output
+
+    return init_fun, apply_fun
+
+
+def node_attention(params, inputs):
+    """Compute node-by-node attention weights."""
+    (w, a, nfa), (adjacency_matrix, node_embeddings) = params, inputs
+    # w shape:   (n_features, n_output_dims)
+    # a shape:   (n_output_dims * 2,)
+    # nfa shape: (n_features,)
+
+    # Firstly, we project the nodes to a different dimensioned space
+    node_feat_attn = vmap(partial(np.multiply, np.abs(nfa)))(node_embeddings)
+    node_projection = np.dot(node_feat_attn, w)
+
+    # Next, we concatenate node features together
+    # into an (n_nodes, n_nodes, 2 * n_output_dims) tensor.
+    node_by_node_concat = concatenate_node_features(node_projection)
+
+    # Then, we project the node-by-node concatenated features
+    # down to the attention dims and apply a nonlinearity,
+    # giving an (n_node, n_node) matrix.
+    projection = np.dot(node_by_node_concat, a)
+    output = nn.leaky_relu(projection, negative_slope=0.1)
+
+    # Squeeze is applied to ensure we have 2D matrices.
+    # Mask out irrelevant values early on.
+    output = np.squeeze(output)
+
+    # Finally, compute attention mapping for message passing.
+    # attention = vmap(nn.softmax)(output) * np.squeeze(adjacency_matrix)
+    attention = output * np.squeeze(adjacency_matrix)
+
+    # Let's now do some experiments below.
+    # If we add back this line:
+    # attention = vmap(normalize_if_nonzero)(attention)
+    # Then we get NaN issues.
+    return attention, node_projection

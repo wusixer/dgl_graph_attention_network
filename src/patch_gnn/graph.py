@@ -341,7 +341,6 @@ def sasa_features(n, d):
     return pd.Series(info, name=n)
 
 
-
 def graph_tensors(
     df: pd.DataFrame, graphs: Dict[str, nx.Graph]
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -358,7 +357,7 @@ def graph_tensors(
     )
     funcs = [
         lambda n, d: pd.Series(aa_props[d["residue_name"]], name=n),
-        sasa_features
+        sasa_features,
     ]
     feats = []
     for acc in df["accession-sequence"]:
@@ -371,7 +370,8 @@ def graph_tensors(
     adjs = []
     for acc in df["accession-sequence"]:
         g = graphs[acc]
-        a = np.expand_dims(np.array(nx.adjacency_matrix(g).todense()), 2)
+        a = nx.adjacency_matrix(g).todense()  #  + np.eye(len(g))
+        a = np.expand_dims(np.array(a), 2)
         a = prep_adjacency_matrix(a, 20)
         adjs.append(a)
     adjs = np.stack(adjs)

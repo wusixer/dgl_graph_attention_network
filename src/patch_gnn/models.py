@@ -13,6 +13,8 @@ from tqdm.auto import tqdm
 from patch_gnn.layers import CustomGraphEmbedding, LinearRegression
 from patch_gnn.training import mseloss, step
 
+from .layers import GraphAttention, GraphSummation
+
 
 class MPNN:
     """Shallow MPNN model in sklearn-compatible format.
@@ -49,12 +51,11 @@ class MPNN:
         self.loss_history = []
 
     def fit(self, X, y):
-        """
-        fit model
+        """Fit model.
+
         :param X: tuple(adjacency, node_features)
         :param y: vector(values to predict)
         """
-        print(X[0].shape, X[1].shape, y.shape)
         if len(y.shape) == 1:
             y = np.reshape(y, (-1, 1))
         init, update, get_params = self.optimizer
@@ -120,6 +121,46 @@ class DeepMPNN(MPNN):
         self.optimizer = adam(step_size=optimizer_step_size)
         self.num_epochs = 100
         output_shape, params = model_init_fun(
+            PRNGKey(42), input_shape=(*node_feature_shape, num_adjacency)
+        )
+
+        self.params = params
+        self.num_training_steps = num_training_steps
+        self.state_history = []
+        self.loss_history = []
+
+
+class DeepGAT(MPNN):
+    """Deep GAT in sklearn-compatible format.
+
+    We do one graph attention layer + a feed forward neural network.
+    """
+
+    def __init__(
+        self,
+        node_feature_shape,
+        num_adjacency,
+        num_training_steps: int = 100,
+        optimizer_step_size=1e-5,
+    ):
+        """
+        :param node_feature_shape: (num_nodes, num_feats)
+        :param num_adjacency: number of adjacency-like matrices
+        """
+        model_init_fun, model_apply_fun = stax.serial(
+            GraphAttention(n_output_dims=256),
+            GraphSummation(),
+            stax.Dense(64),
+            stax.Relu,
+            stax.Dense(16),
+            stax.Relu,
+            stax.Dense(1),
+        )
+        self.model_apply_fun = model_apply_fun
+
+        self.optimizer = adam(step_size=optimizer_step_size)
+        self.num_epochs = 100
+        _, params = model_init_fun(
             PRNGKey(42), input_shape=(*node_feature_shape, num_adjacency)
         )
 
