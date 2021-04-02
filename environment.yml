@@ -14,7 +14,7 @@ dependencies:
 - ipykernel>=5.3.4
 - ipython>=7.18.1
 - isort>=5.6.0  # has a bugfix that we need for imports sorted underneath docstring
-- jax
+- jax #=0.2.8 # has to be this version https://github.com/google/jax/issues/5374
 - jaxlib
 - jupyter>=1.0.0
 - jupyterlab>=3.0
@@ -54,4 +54,4 @@ dependencies:
 # After installation, be sure to install easy_datastore
 # for easy access to the data.
 # pip install git+https://bitbucket.prd.nibr.novartis.net/scm/sda/easy-datastore.git
-# Will be added later pip install --no-deps jax-unirep
+# Will be added later pip install jax-unirep # using pip install --no-deps jax-unirep will ended up with optuna not found error

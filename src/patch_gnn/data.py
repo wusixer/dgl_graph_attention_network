@@ -61,5 +61,5 @@ def load_ghesquire() -> pd.DataFrame:
 
     # 7. Drop the duplicates, which has the same accession value
     df = df.drop_duplicates(subset=["accession", "end"])
-
+    # use a schema script to check types and properties for a pd.dataframe https://pandera.readthedocs.io/en/stable/
     return ghesquire_processed_schema.validate(df)

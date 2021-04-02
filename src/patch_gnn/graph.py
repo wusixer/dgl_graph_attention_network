@@ -5,7 +5,7 @@ from typing import Callable, Dict, Hashable, List, Tuple
 import jax.numpy as np
 import networkx as nx
 import pandas as pd
-import xarray as xr
+import xarray as xr  # introduces coordinates and attributes on top of np http://xarray.pydata.org/en/stable/why-xarray.html
 from pyprojroot import here
 
 
@@ -30,6 +30,9 @@ def extract_neighborhood(G: nx.Graph, n: Hashable, r: int) -> List[Hashable]:
 
     nodes = [node for node, length in path_lengths.items() if length <= r]
     return G.subgraph(nodes)
+
+
+"""format_adjacency is a decorator that allow other functions to extend it https://realpython.com/primer-on-python-decorators/"""
 
 
 def format_adjacency(func: Callable):

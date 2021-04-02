@@ -16,7 +16,8 @@ from patch_gnn.data import load_ghesquire
 
 data = load_ghesquire()
 
-
+# about dispatch https://ericmjl.github.io/blog/2021/1/24/dispatch-rather-than-check-types/
+# https://www.python.org/dev/peps/pep-0443/
 @singledispatch
 def split_delimiter(x, delimiter=";"):
     """Split delimiter helper function."""
@@ -39,6 +40,7 @@ processed_data = (
     data.dropna(subset=["accession"])
     .transform_column("isoforms", split_delimiter)
     .explode("isoforms")
+    # how functools.partial work https://ericmjl.github.io/blog/2019/3/22/functools-partial/
     .transform_column("isoforms", partial(split_delimiter, delimiter=" ("))
     .transform_column("isoforms", lambda x: x[0] if isinstance(x, list) else x)
     .transform_column(
@@ -55,7 +57,7 @@ processed_data = (
 #
 
 
-load_dotenv()
+load_dotenv()  # what does .env look like?
 
 con = connect(dsn=os.getenv("HH_CONNECTION_STRING"))
 
@@ -69,7 +71,8 @@ accession_data = pd.read_sql(
     con=con,
 )
 
-
+# pyjanitor @pf.register_dataframe_method  https://pdfs.semanticscholar.org/7b96/42a31f805a7c9584b2e6f6b08576a1e029f7.pdf
+# pandas_flavor: https://pypi.org/project/pandas-flavor/
 @pf.register_dataframe_method
 def to_fasta(df, identifier_column_name, sequence_column_name, filename):
     """Write dataframe to FASTA file."""

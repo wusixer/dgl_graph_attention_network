@@ -1,6 +1,7 @@
 from collections import defaultdict
-import pandas as pd
 from io import StringIO
+
+import pandas as pd
 
 
 def pops2df(fname, wanted_sasa="RESIDUE SASAs"):
@@ -24,7 +25,6 @@ def pops2df(fname, wanted_sasa="RESIDUE SASAs"):
         if "===" in line:
             sasa_type = line.split("===")[1].strip(" ")
         sasa_raw[sasa_type].append(line)
-
 
     data = "".join(l.replace("\t\t", "\t") for l in sasa_raw[wanted_sasa][1:])
     df = pd.read_csv(StringIO(data), sep="\t")

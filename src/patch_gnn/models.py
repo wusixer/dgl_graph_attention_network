@@ -17,7 +17,7 @@ from .layers import GraphAttention, GraphSummation
 
 
 class MPNN:
-    """Shallow MPNN model in sklearn-compatible format.
+    """Shallow MPNN (message passing neural network) model in sklearn-compatible format.
 
     Single message passing step + linear regression on top.
     """
@@ -131,7 +131,7 @@ class DeepMPNN(MPNN):
 
 
 class DeepGAT(MPNN):
-    """Deep GAT in sklearn-compatible format.
+    """Deep GAT(graph attention) in sklearn-compatible format.
 
     We do one graph attention layer + a feed forward neural network.
     """

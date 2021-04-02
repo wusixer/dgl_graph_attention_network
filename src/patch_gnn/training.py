@@ -87,9 +87,13 @@ def step(
     :returns:
         Optimizer state (`state`) and loss score (`v`).
     """
-    dloss_fun = value_and_grad(loss_fun)
+    dloss_fun = value_and_grad(
+        loss_fun
+    )  # Create a function which evaluates both loss_fun and the gradient of loss_fun
     params = get_params(state)
-    v, g = dloss_fun(params, apply_fun, inputs, outputs)
+    v, g = dloss_fun(
+        params, apply_fun, inputs, outputs
+    )  # v is the value of loss fun, g is the gradient of loss_fun
     state = update_fun(i, g, state)
 
     return state, v

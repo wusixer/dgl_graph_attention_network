@@ -30,13 +30,14 @@ def MessagePassing(adjacency_weights_init=glorot_normal()):
         :param rng: The PRNGKey (from JAX)
             for random number generation _reproducibility_.
         :param input_shape: The shape of the graph's node feature matrix.
-            Should be a tuple of (n_nodes, n_features, n_adjacencies)
+            Should be a tuple of (n_nodes, n_features, n_adjacencies) 
+            n_adjacencies : n-degree adjancency like matrix
         :returns: Tuple of (output_shape, params)
         """
         n_nodes, n_features, n_adjacencies = input_shape
         k1, k2 = random.split(rng)
         adjacency_weights = adjacency_weights_init(k1, (n_adjacencies, 1))
-        return (n_nodes, n_features), (adjacency_weights)
+        return (n_nodes, n_features), (adjacency_weights) # always return output_shape, parmas tuple
 
     def apply_fun(params, inputs, **kwargs):
         """
@@ -52,9 +53,14 @@ def MessagePassing(adjacency_weights_init=glorot_normal()):
         :returns: Weighted message passing between nodes and adjacency tensors.
         """
         adjacency_weights = params
-        A, F = inputs
-        mp = vmap(np.dot, in_axes=(-1, None), out_axes=(-1))(A, F)
-        return np.squeeze(np.dot(mp, adjacency_weights))
+        A, F = inputs  # A: adjacency matrix, F: feature matrix
+        # https://colinraffel.com/blog/you-don-t-know-jax.html#:~:text=minibatch%20of%20examples.-,jax.,there%20is%20only%20one%20argument.
+        mp = vmap(np.dot, in_axes=(-1, None), out_axes=(-1))(
+            A, F
+        )  # in_axes= -1 means using the -1 index (a,b,c) would be c, of A and F when doing dot. shape (n_nodes, n_features, n_adjacency_like_matrics)
+        return np.squeeze(
+            np.dot(mp, adjacency_weights)
+        )  # shape (n_nodes, n_features)
 
     return init_fun, apply_fun
 
@@ -100,17 +106,17 @@ def GraphSummation():
         :param input_shape: (n_nodes, n_features/n_activations).
         :returns: Tuple of output_dim (n_features/n_activations, empty tuple)
         """
-        output_dim = input_shape[-1]
-        params = ()
+        output_dim = input_shape[-1]  # last dim of the input shape
+        params = ()     # the params is empty because the layer doesn't have any parameters
         return (output_dim,), params
 
     def apply_fun(params, inputs: np.ndarray, **kwargs):
         """
-        Sum up all node features.
+        Sum up all node features. # by convention, the 1st param of apply_fun is params, but this layer doesn't require any param
 
         :param params: An empty tuple
-        :param inputs: Node feature array for a graph.
-        :returns: Summed up node feature array.
+        :param inputs: Node feature array for a graph. (n_nodes, n_features)
+        :returns: Summed up node feature array. (n_features,)
         """
         return np.sum(inputs, axis=0)
 
@@ -118,7 +124,7 @@ def GraphSummation():
 
 
 def CustomGraphEmbedding(n_output: int):
-    """Return an embedding of a graph in n_output dimensions."""
+    """Return an embedding of a graph in n_output dimensions."""  # stax.serial linearly combines all the steps
     init_fun, apply_fun = stax.serial(
         MessagePassing(),
         stax.Dense(2048),
