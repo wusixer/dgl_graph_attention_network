@@ -39,7 +39,16 @@ def padding(protein_seq: str, length: int) -> str:
 
 
 def one_hot(df: pd.DataFrame, padding_length: int) -> np.ndarray:
-    """Convert the `sequence` column of `df` to a one-hot array."""
+    """
+    Convert the `sequence` column of `df` to a one-hot array.
+    
+    :param df: a pandas dataframe with a column called "sequence" for one hot conversion
+    :param padding_length: same as length in `padding`, the length that the padded protein will be
+    """
+    in_max_len = max(len(seq) for seq in df["sequence"])
+    if padding_length < in_max_len:
+        print(f"the input padding_length should be longer or equal to the max length of the inputs, resetting padding_length from {padding_length}  to max sequence length {in_max_len}")
+        padding_length = in_max_len
     padded_seqs = list(padding(seq, padding_length) for seq in df["sequence"])
     encodings = [encoder(seq) for seq in padded_seqs]
     return np.vstack(encodings)

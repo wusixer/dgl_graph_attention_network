@@ -260,3 +260,4 @@ def node_attention(params, inputs):
     # attention = vmap(normalize_if_nonzero)(attention)
     # Then we get NaN issues.
     return attention, node_projection
+
