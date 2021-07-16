@@ -16,12 +16,14 @@ from patch_gnn.solvent import pops2df
 
 load_dotenv()
 
-#item = "a1a0d3a7-6723-47f0-86cc-5f42e69435b5" #
-#fpath = download_item(item) #
+# item = "a1a0d3a7-6723-47f0-86cc-5f42e69435b5" #
+# fpath = download_item(item) #
 
 
-dest_path = here() / "data/ghesquire_2011/models.zip" # this file is a table taht has all the aa and its correpsonding sasa values
-#shutil.move(fpath, dest_path)
+dest_path = (
+    here() / "data/ghesquire_2011/models.zip"
+)  # this file is a table taht has all the aa and its correpsonding sasa values
+# shutil.move(fpath, dest_path)
 
 
 z = zipfile.ZipFile(file=dest_path)

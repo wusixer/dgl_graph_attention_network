@@ -11,7 +11,7 @@ from pyprojroot import here
 
 def extract_neighborhood(G: nx.Graph, n: Hashable, r: int) -> List[Hashable]:
     """
-    Extract neighborhood of radius `r` for a given node `n`.
+    Extract neighborhood of radius `r` or less than radius `r` for a given node `n`.
 
     Used to generate subgraphs of the original graph
     that contain only a subset of nodes
@@ -228,6 +228,9 @@ def generate_feature_dataframe(
     matrix = []
     for n, d in G.nodes(data=True):
         series = []
+        # the followings are for each AA in a graph, make a pd.series
+        # note that funcs are operations to do pd.series transformation for
+        # each AA
         for func in funcs:
             res = func(n, d)
             if res.name != n:
@@ -276,7 +279,8 @@ def stack_feature_tensors(
     """
     Stack feature matrices for all graphs in a collection of graphs.
 
-    :param Gs: The collection of graphs to make a feature tensor for.
+    :param Gs: The collection of graphs to make a feature tensor for (List[nx.Graph]).
+        ### if uncomment the below code block comments, Gs could also be a Dict - {str: nx.Graph}
     :param func: The graph node featurization funcs.
     :param max_length: For the case where the maximum length is expensive to calculate,
         pre-calculate this and pass it in here.
@@ -287,10 +291,18 @@ def stack_feature_tensors(
     if max_length is None:
         max_length = max(len(g) for g in Gs)
 
+    # if isinstance(Gs, list):
     for g in Gs:
         F = generate_feature_dataframe(g, funcs=funcs).values
         F = prep_features(F, max_length + 1)
         feats.append(F)
+
+    # if isinstance(Gs, dict):
+    #    for g in Gs.values():
+    #        F = generate_feature_dataframe(g, funcs=funcs).values
+    #        F = prep_features(F, max_length + 1)
+    #        feats.append(F)
+
     return np.stack(feats)
 
 
@@ -344,6 +356,12 @@ def sasa_features(n, d):
     return pd.Series(info, name=n)
 
 
+def fluc_features(n, d):
+    """Get back fluc features AMN and NMA as a pandas Series."""
+    info = {"fluc_amn": d["anm"], "fluc_nma": d["nma"]}
+    return pd.Series(info, name=n)
+
+
 def graph_tensors(
     df: pd.DataFrame, graphs: Dict[str, nx.Graph]
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -361,6 +379,7 @@ def graph_tensors(
     funcs = [
         lambda n, d: pd.Series(aa_props[d["residue_name"]], name=n),
         sasa_features,
+        fluc_features,
     ]
     feats = []
     for acc in df["accession-sequence"]:

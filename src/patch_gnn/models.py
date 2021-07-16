@@ -2,6 +2,8 @@
 Graph Neural Net Model
 """
 from functools import partial
+from sys import setdlopenflags
+from typing import Dict
 
 import jax.numpy as np
 from jax import jit, vmap
@@ -10,10 +12,12 @@ from jax.experimental.optimizers import adam
 from jax.random import PRNGKey
 from tqdm.auto import tqdm
 
-from patch_gnn.layers import CustomGraphEmbedding, LinearRegression
+from patch_gnn.layers import (
+    LinearRegression,  # , MessagePassing, GraphSummation, GraphAttention #CustomGraphEmbedding
+)
 from patch_gnn.training import mseloss, step
 
-from .layers import GraphAttention, GraphSummation
+from .layers import GraphAttention, GraphSummation, MessagePassing
 
 
 class MPNN:
@@ -34,7 +38,13 @@ class MPNN:
         :param num_adjacency: number of adjacency-like matrices
         """
         model_init_fun, model_apply_fun = stax.serial(
-            CustomGraphEmbedding(1024),
+            # ---- this is the graph embedding
+            MessagePassing(),
+            stax.Dense(2048),
+            stax.Sigmoid,
+            GraphSummation(),
+            stax.Dense(1024),
+            # -------------------------------
             LinearRegression(1),
         )
         self.model_apply_fun = model_apply_fun
@@ -49,6 +59,45 @@ class MPNN:
         self.num_training_steps = num_training_steps
         self.state_history = []
         self.loss_history = []
+
+    # pass in a dict, if the value is null, don't do anything, if not assign new values
+    #    def __call__(self,  num_training_steps):
+    #        '''
+    #        This function is designed for Optuna pacakge for hyperparameter optmizing,
+    #        such that this class instance is callable.
+    #
+    #        The hyperparameters that could be modified is passed in through a dictionary,
+    #        the default dictionary value is empty. The hypermaramter values associated to
+    #        this class can only be changed if the dict value is non-empty.
+
+    #        :param param_dict: e.g can be {"num_training_steps": 10}
+    #        '''
+    #        self.num_training_steps =num_training_steps
+
+    #        return self
+
+    def __call__(self, param_dict: Dict = {}):
+        """
+        This function is designed for Optuna pacakge for hyperparameter optmizing,
+        such that this class instance is callable.
+
+        The hyperparameters that could be modified is passed in through a dictionary,
+        the default dictionary value is empty. The hypermaramter values associated to
+        this class can only be changed if the dict value is non-empty.
+
+        :param param_dict: e.g can be {"num_training_steps": 10}
+        """
+        if len(param_dict.keys()) == 0:
+            return self
+        else:
+            for arg, value in param_dict.items():
+                # only specific attributes can be modified here
+                if arg not in ["num_training_steps", "optimizer_step_size"]:
+                    raise ValueError(f"{arg} is not part of class attribute")
+                else:
+                    setattr(self, arg, value)
+
+        return self
 
     def fit(self, X, y):
         """Fit model.
@@ -71,9 +120,9 @@ class MPNN:
         training_step = jit(training_step)
 
         state = init(self.params)
-
         for i in tqdm(range(self.num_training_steps)):
             state, loss = training_step(i, state)
+
             self.state_history.append(state)
             self.loss_history.append(loss)
 
@@ -110,7 +159,13 @@ class DeepMPNN(MPNN):
         :param num_adjacency: number of adjacency-like matrices
         """
         model_init_fun, model_apply_fun = stax.serial(
-            CustomGraphEmbedding(1024),
+            # ---- this is the graph embedding
+            MessagePassing(),
+            stax.Dense(2048),
+            stax.Sigmoid,
+            GraphSummation(),
+            stax.Dense(1024),
+            # -------------------------------
             # One hidden layer
             stax.Dense(512),
             stax.Relu,

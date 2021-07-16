@@ -16,8 +16,9 @@ sasa:
 fluc:
 	python scripts/ghesquire-fluc.py	
 
+# generate graphs and process_dataset
 # the files after ":" are the files dependent on this make command, it tells Make if the file changes, what files to look for
-graphs: data/ghesquire_2011/sasa.pkl data/ghesquire_2011/protein_sequences.fasta
+graphs: data/ghesquire_2011/sasa.pkl data/ghesquire_2011/ANM.pkl data/ghesquire_2011/NMA.pkl data/ghesquire_2011/protein_sequences.fasta
 	python scripts/ghesquire-graphs.py
 
 

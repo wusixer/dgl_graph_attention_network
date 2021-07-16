@@ -16,17 +16,16 @@ from patch_gnn.fluctuations import fluc2df
 
 load_dotenv()
 
-#currently the file is not on data_store yet
+# currently the file is not on data_store yet
 ##item = "a1a0d3a7-6723-47f0-86cc-5f42e69435b5" #
 ##fpath = download_item(item) #
 
 for fluc_file_zip in ["ANM", "NMA"]:
-    dest_path = here() / f"data/ghesquire_2011/{fluc_file_zip}.zip" 
-    #shutil.move(fpath, dest_path)
+    dest_path = here() / f"data/ghesquire_2011/{fluc_file_zip}.zip"
+    # shutil.move(fpath, dest_path)
     z = zipfile.ZipFile(file=dest_path)
     z.extractall()
-    #dest_path.unlink() # not delete the folder in the end
-
+    # dest_path.unlink() # not delete the folder in the end
 
     fluc_dir = Path(fluc_file_zip)
     fluc_files = [f for f in os.listdir(fluc_dir) if f.endswith(".fluc")]
@@ -34,8 +33,9 @@ for fluc_file_zip in ["ANM", "NMA"]:
 
     fluc_dfs = dict()
     for file, accession in tqdm(zip(fluc_files, accessions)):
-        fluc_dfs[accession] = fluc2df(fluc_dir / file)#, wanted_amn="RESIDUE SASAs") # this part need to write a new function
-
+        fluc_dfs[accession] = fluc2df(
+            fluc_dir / file
+        )  # , wanted_amn="RESIDUE SASAs") # this part need to write a new function
 
     with open(here() / f"data/ghesquire_2011/{fluc_file_zip}.pkl", "wb") as f:
         pkl.dump(fluc_dfs, f)
