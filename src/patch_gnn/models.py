@@ -39,10 +39,12 @@ class MPNN:
         """
         model_init_fun, model_apply_fun = stax.serial(
             # ---- this is the graph embedding
-            MessagePassing(),
-            stax.Dense(2048),
-            stax.Sigmoid,
-            GraphSummation(),
+            # can apply a dense layer and then do a massage passing - chat with Cihan
+            # (num_batch, max_node, 128)
+            MessagePassing(), #(num_batch, max_node, max_node)x (num_batch, max_node,n_features),#(num_batch, max_node, num_features ) # there is no order in graph!! max_node order no longer matters
+            stax.Dense(2048), #(num_batch, max_node, 2048)
+            stax.Sigmoid,    
+            GraphSummation(), 
             stax.Dense(1024),
             # -------------------------------
             LinearRegression(1),
@@ -223,3 +225,33 @@ class DeepGAT(MPNN):
         self.num_training_steps = num_training_steps
         self.state_history = []
         self.loss_history = []
+
+    def fit(self, X, y):
+        """Fit model.
+
+        :param X: tuple(adjacency, node_features)
+        :param y: vector(values to predict)
+        """
+        if len(y.shape) == 1:
+            y = np.reshape(y, (-1, 1))
+        init, update, get_params = self.optimizer
+        training_step = partial(
+            step,
+            loss_fun=mseloss,
+            apply_fun=self.model_apply_fun,
+            update_fun=update,
+            get_params=get_params,
+            inputs=X,
+            outputs=y,
+        )
+        #training_step = jit(training_step)
+
+        state = init(self.params)
+        for i in tqdm(range(self.num_training_steps)):
+            state, loss = training_step(i, state)
+
+            self.state_history.append(state)
+            self.loss_history.append(loss)
+
+        self.params = get_params(state)
+        return self

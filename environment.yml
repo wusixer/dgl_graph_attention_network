@@ -1,6 +1,7 @@
 name: patch-gnn
 channels:
 - conda-forge
+- dglteam
 - https://repo.nibr.novartis.net/artifactory/api/conda/conda-local
 dependencies:
 - python=3.8
@@ -16,6 +17,7 @@ dependencies:
 - isort>=5.6.0  # has a bugfix that we need for imports sorted underneath docstring
 - jax #=0.2.8 # has to be this version https://github.com/google/jax/issues/5374
 - jaxlib
+- dgl
 - jupyter>=1.0.0
 - jupyterlab>=3.0
 - mamba>=0.5.1
@@ -52,7 +54,20 @@ dependencies:
   - mkdocstrings>=0.13.6
   - mknotebooks>=0.6.0
   - proteingraph>=0.3.0
-# After installation, be sure to install easy_datastore
+  - tensorboardX  # pytorch tensorboard integration: from tensorboardX import SummaryWriter
+  - tensorboard
+    # After installation, be sure to install easy_datastore
 # for easy access to the data.
 # pip install git+https://bitbucket.prd.nibr.novartis.net/scm/sda/easy-datastore.git
 # Will be added later pip install jax-unirep # using pip install --no-deps jax-unirep will ended up with optuna not found error
+# install pytorch: PyTorch latest stable release (as of April 06, 2020) is still 1.4, as you can see here.
+#
+# Therefore, if you want to install the nightly build (which is on track to the 1.5) using conda, you can follow the official instructions:
+#
+# Cuda 10.1:
+# conda install pytorch torchvision cudatoolkit=10.1 -c pytorch-nightly -c defaults -c conda-forge
+# Cuda 9.2:
+# conda install pytorch torchvision cudatoolkit=9.2 -c pytorch-nightly -c defaults -c conda-forge -c numba/label/dev
+# or the CPU-only version:
+#
+# conda install pytorch torchvision cpuonly -c pytorch-nightly -c defaults -c conda-forge
