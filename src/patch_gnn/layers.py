@@ -228,6 +228,8 @@ def concatenate_node_features(node_feats):
     #     return lax.cond(np.sum(p_vect) == 0, if_zero, if_nonzero, p_vect)
 
     # def softmax_on_non_zero(attention, adj):
+
+
 def softmax_on_non_zero(attention):
     """
     This function works on toy data however, it will encounter 0
@@ -247,19 +249,21 @@ def softmax_on_non_zero(attention):
     # 0 division, but still, there could be negatives so the sum would be lower than the max
     # which means the attnetion could be >1 for some nodes
     # need to exponetiate it before the sum
-    attention_sum = np.sum(attention,axis=1)
-    #according to https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.nonzero.html
-    # we cannot do vmap with jnp.nonzero implementation, for the @jit requires each graph 
-    # has the same # of non-zero element. so can't do 
+    attention_sum = np.sum(attention, axis=1)
+    # according to https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.nonzero.html
+    # we cannot do vmap with jnp.nonzero implementation, for the @jit requires each graph
+    # has the same # of non-zero element. so can't do
     #  `vmap(partial(node_attention, model.params[0]))(train_graph)`
     # but other than that it works
-    max_node = len(np.nonzero(attention_sum)[0]) 
-    a_softmax = attention[:max_node, :max_node]/attention_sum[:max_node][:,None]
+    max_node = len(np.nonzero(attention_sum)[0])
+    a_softmax = (
+        attention[:max_node, :max_node] / attention_sum[:max_node][:, None]
+    )
     pad = attention.shape[0] - a_softmax.shape[0]
     a_softmax = np.pad(
-            a_softmax,
-            [(0, pad), (0, pad)],
-        )
+        a_softmax,
+        [(0, pad), (0, pad)],
+    )
     return a_softmax
     #    a_softmax = attention/attention_sum
     #    return a_softmax
@@ -434,8 +438,8 @@ def node_attention(params, inputs):
     # down to the attention dims and apply a nonlinearity,
     # giving an (n_node, n_node) matrix.
     projection = np.dot(node_by_node_concat, a)
-    atten_leaky_relu = nn.leaky_relu(projection, negative_slope=0.1)#******
-    #atten_tanh = nn.hard_tanh(projection)  # --works
+    atten_leaky_relu = nn.leaky_relu(projection, negative_slope=0.1)  # ******
+    # atten_tanh = nn.hard_tanh(projection)  # --works
     # Squeeze is applied to ensure we have 2D matrices.
     atten_leaky_relu = np.squeeze(atten_leaky_relu)  # (n_node, n_node)****
 
@@ -443,13 +447,13 @@ def node_attention(params, inputs):
     # this means we do element-wise mulitiplication of to maks out
     # the edges that are not connected to each other
     # attention = vmap(nn.softmax)(output) * np.squeeze(adjacency_matrix)
-    attention = atten_leaky_relu * np.squeeze(#****
-                adjacency_matrix#****
-                )  # -- might not need to use adjacency matrix*****
-    #norm_attention = atten_tanh * np.squeeze(adjacency_matrix)
+    attention = atten_leaky_relu * np.squeeze(  # ****
+        adjacency_matrix  # ****
+    )  # -- might not need to use adjacency matrix*****
+    # norm_attention = atten_tanh * np.squeeze(adjacency_matrix)
 
     # apply softmax norm
-    norm_attention = softmax_on_non_zero(attention)#******
+    norm_attention = softmax_on_non_zero(attention)  # ******
     # np.squeeze on adjacency_matrix so it's (n_node, n_node)
     # norm_attention = softmax_on_non_zero(attention)#, np.squeeze(adjacency_matrix))
     # norm_attention = vmap(partial(softmax_on_non_zero, adj =adjacency_matrix ))(attention)

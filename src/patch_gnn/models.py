@@ -41,10 +41,10 @@ class MPNN:
             # ---- this is the graph embedding
             # can apply a dense layer and then do a massage passing - chat with Cihan
             # (num_batch, max_node, 128)
-            MessagePassing(), #(num_batch, max_node, max_node)x (num_batch, max_node,n_features),#(num_batch, max_node, num_features ) # there is no order in graph!! max_node order no longer matters
-            stax.Dense(2048), #(num_batch, max_node, 2048)
-            stax.Sigmoid,    
-            GraphSummation(), 
+            MessagePassing(),  # (num_batch, max_node, max_node)x (num_batch, max_node,n_features),#(num_batch, max_node, num_features ) # there is no order in graph!! max_node order no longer matters
+            stax.Dense(2048),  # (num_batch, max_node, 2048)
+            stax.Sigmoid,
+            GraphSummation(),
             stax.Dense(1024),
             # -------------------------------
             LinearRegression(1),
@@ -244,7 +244,7 @@ class DeepGAT(MPNN):
             inputs=X,
             outputs=y,
         )
-        #training_step = jit(training_step)
+        # training_step = jit(training_step)
 
         state = init(self.params)
         for i in tqdm(range(self.num_training_steps)):
