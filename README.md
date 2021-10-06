@@ -6,6 +6,7 @@
 - Yang Yang
 - Xiao, Mei
 - Ma, Eric
+- Jiayi Cox
 - Barbara Brannetti
 
 To move nimbly, we probably should to keep the team small.
