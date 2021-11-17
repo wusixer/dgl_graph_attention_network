@@ -198,6 +198,7 @@ def train_val_with_gatn_no_cv(
     test_loader: GraphDataLoader,
     save_checkpoint: bool = False,
     tensorboard: bool = False,
+    early_stopping:bool = False,
     n_epochs: int = 100,
     in_dim: int = 67,
     embed_dim: int = 96,
@@ -218,6 +219,9 @@ def train_val_with_gatn_no_cv(
         save_checkpoint(bool, optional): whether to save the model after all epochs into file. Defaults to False.
         tensorboard (bool, optional): whether to save the performance for display in tensorboard.
                                      Defaults to False.
+        early_stopping (bool, optional): whether to use early stopping to stop training the model up to X epoch based 
+                                        on the performance diff between training set and test set. 
+                                        Defaults to False.
         n_epochs (int, optional): number of epochs. Defaults to 100.
         in_dim (int, optional): the input dimension, usually is 67 for 67 descriptors.
                                  Defaults to 67.
@@ -318,7 +322,16 @@ def train_val_with_gatn_no_cv(
                     epoch,
                 )
 
+            # early stopping if performance on training set >> performance on testset
+            if early_stopping:
+                # if training is much better than test performance, stop training more epochs
+                if train_mseloss_list[-1] - test_mseloss_list[-1] >0.4:
+                    break
+
         if save_checkpoint:
+            print(f'epoch {epoch}, learning rate {lr}, training \
+            mseloss {train_mseloss_list[-1]}, \
+            test mseloss {test_mseloss_list[-1]}')
             torch.save(net, f"best_gatn_{lr}.pkl")
 
     if tensorboard:
