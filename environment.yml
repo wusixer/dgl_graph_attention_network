@@ -58,3 +58,4 @@ dependencies:
   - proteingraph>=0.3.0
   - tensorboardX  # pytorch tensorboard integration: from tensorboardX import SummaryWriter
   - tensorboard
+  - jax-unirep
