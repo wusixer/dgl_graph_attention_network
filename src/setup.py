@@ -7,6 +7,6 @@ setup(
     # mandatory
     version="0.1",
     # mandatory
-    author="Eric J. Ma, Kannan Sankar, Mei Xiao",
+    author="Eric J. Ma,Jiayi Cox,  Kannan Sankar, Mei Xiao",
     packages=find_packages(),
 )
