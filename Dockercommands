@@ -1,0 +1,10 @@
+docker build  -t patchgnn_env  .
+
+# without mounting volumes
+docker container run -it  --publish 8888:8888 --name test patchgnn_env
+
+#mount volunes, the workdir in docker container is /homd/patchgnn
+docker container run -p 8888:8888 -it -v $(pwd):/home/patchgnn patchgnn_envi
+
+# exam a running docker container 
+docker container exec -it container_name

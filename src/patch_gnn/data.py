@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from dotenv import load_dotenv
-from easy_datastore.functions import download_item
+#from easy_datastore.functions import download_item
 from pyprojroot import here
 from scipy.special import logit
 
