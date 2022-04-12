@@ -19,9 +19,8 @@ from dgl.dataloading import GraphDataLoader
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 
-from patch_gnn.dgl_cv_split import k_fold_split
-from patch_gnn.dgl_dataset import PatchGNNDataset, collate_fn
-from patch_gnn.dgl_layer import GATN
+from dgl_gnn.dgl_dataset import DGLGNNDataset, collate_fn
+from dgl_gnn.dgl_layer import GATN
 
 
 def reset_weights(m):

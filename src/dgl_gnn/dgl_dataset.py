@@ -10,14 +10,13 @@ from dgl.data import DGLDataset
 from pyprojroot import here
 from tqdm import tqdm
 
-from patch_gnn.graph import fluc_features, sasa_features
 
-
+# this function is taken from Eric Ma
 def generate_sorted_feature_dataframe(
     G: nx.Graph, funcs: List[Callable]
 ) -> pd.DataFrame:
     """
-    Same implementation as jax patch-gnn.graph.generate_feature_dataframe
+    Same implementation as jax dgl-gnn.graph.generate_feature_dataframe
     but the nodes are sorted
 
     Return a pandas DataFrame representation of node metadata.
@@ -153,7 +152,7 @@ def convert_networkx_to_dgl(
     return dgl_graph, mapping
 
 
-class PatchGNNDataset(DGLDataset):
+class DGLGNNDataset(DGLDataset):
     def __init__(
         self,
         name: str = "ghesquire_2011",
