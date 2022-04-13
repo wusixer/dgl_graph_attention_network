@@ -4,7 +4,7 @@
 FROM continuumio/miniconda3
 
 #speicify docker workdir
-WORKDIR /home/patchgnn
+WORKDIR /home/dglgnn
 
 #copy neccessary files from host to docker
 COPY environment.yml .
@@ -21,31 +21,31 @@ EXPOSE 8888
 
 
 #taken from https://medium.com/@chadlagore/conda-environments-with-docker-82cdc9d25754 -- below commented out line won't work
-#ENV PATH /opt/conda/envs/patch-gnn/bin:$PATH
-#RUN echo "conda activate patch-gnn" > ~/.bashrc
+#ENV PATH /opt/conda/envs/dgl-gnn/bin:$PATH
+#RUN echo "conda activate dgl-gnn" > ~/.bashrc
 
 
 #taken from https://pythonspeed.com/articles/activate-conda-dockerfile/
 # Make RUN commands use the new environment:
-SHELL ["conda", "run", "-n", "patch-gnn", "/bin/bash", "-c"]
+SHELL ["conda", "run", "-n", "dgl-gnn", "/bin/bash", "-c"]
 
 #give full path to the src directory on docker 
-ENV PYTHONPATH /home/patchgnn/src/
-# install patchgnn's customized package and install ipykernel
+ENV PYTHONPATH /home/dglgnn/src/
+# install dglgnn's customized package and install ipykernel
 RUN python src/setup.py install 
 
-RUN python -m ipykernel install --user  --name patch-gnn
+RUN python -m ipykernel install --user  --name dgl-gnn
 
 
 # specify python env path, use the python path in the docker container not on the host
-#ENV PATH /opt/conda/envs/patch-gnn:$PATH
-#ENV PATH /Users/coxji1/anaconda/envs/patch-gnn:$PATH
-#RUN conda init bash && conda activate patch-gnn
+#ENV PATH /opt/conda/envs/dgl-gnn:$PATH
+#ENV PATH /Users/coxji1/anaconda/envs/dgl-gnn:$PATH
+#RUN conda init bash && conda activate dgl-gnn
 
 
 #run jupyter notebook
-#CMD ["conda", "run", "--no-capture-output", "-n", "patch-gnn", "python"]
-CMD ["conda", "run", "--no-capture-output", "-n", "patch-gnn",  "jupyter", "lab", "--allow-root", "--ip='*'"]
+#CMD ["conda", "run", "--no-capture-output", "-n", "dgl-gnn", "python"]
+CMD ["conda", "run", "--no-capture-output", "-n", "dgl-gnn",  "jupyter", "lab", "--allow-root", "--ip='*'"]
 
 
 
